@@ -1,3 +1,16 @@
+{- |
+TODO bureaucratic stuff
+
+Module
+Description
+Copyright
+Licence
+
+Maintainer
+Stability
+Portability
+-}
+
 module CommandRunner (
 
     CommandRunner
@@ -12,8 +25,9 @@ module CommandRunner (
   , benign
   , modify
   , check
-  
+
   ) where
+
 -- We'll start with a thread-unsafe variant, and then make it thread safe
 -- later!
 import Data.IORef
@@ -77,20 +91,6 @@ instance Monoid (Command env) where
       undoX <- extractCommand x
       undoY <- extractCommand y
       return $ undoY `mappend` undoX
-
-type TestEnv = Integer
-
-setCounter :: Integer -> Command TestEnv
-setCounter i = Command $ do
-  last <- check
-  modify (const i)
-  return $ setCounter last
-
-incrementCounter :: Command TestEnv
-incrementCounter = Command $ do
-  last <- check
-  modify ((+) 1)
-  return $ setCounter last
 
 data CommandRunner env = CommandRunner {
     _environment :: IORef env
