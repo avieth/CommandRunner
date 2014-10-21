@@ -11,7 +11,7 @@ Stability
 Portability
 -}
 
-module CommandRunner (
+module Control.CommandRunner (
 
     CommandRunner
   , newCommandRunner
@@ -21,7 +21,7 @@ module CommandRunner (
   , redo
   , peek
 
-  , Command
+  , Command(Command)
   , benign
   , modify
   , check
