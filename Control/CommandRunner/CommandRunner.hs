@@ -3,6 +3,7 @@ module CommandRunner (
     CommandRunner
   , newCommandRunner
   , exec
+  , execAppend
   , undo
   , redo
   , peek
@@ -123,6 +124,21 @@ exec cmdRunner k cmd = do
   modifyIORef (cmdRunnerRedoStack cmdRunner) (const [])
   currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
   k currentEnvironment
+
+execAppend :: CommandRunner env -> (env -> IO ()) -> Command env -> IO ()
+execAppend cmdRunner k cmd = do
+  undoCmd <- runCommand cmd (cmdRunnerEnv cmdRunner)
+  modifyIORef (cmdRunnerUndoStack cmdRunner) (updateTopOfStack undoCmd)
+  -- ^ The difference between execAppend and exec; we don't always push a new
+  -- stack frame. Instead, if the stack is not empty, we append to the top of
+  -- it, so that the undo frame includes this one.
+  modifyIORef (cmdRunnerRedoStack cmdRunner) (const [])
+  currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
+  k currentEnvironment
+    where updateTopOfStack undoCmd [] = [undoCmd]
+          updateTopOfStack undoCmd (x : xs) = (undoCmd `mappend` x) : xs
+          -- ^ We append in front, so that this undo is run before the
+          -- remaining undos!
 
 undo :: CommandRunner env -> (env -> IO ()) -> IO ()
 undo cmdRunner k = do
