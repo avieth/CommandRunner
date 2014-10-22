@@ -9,6 +9,16 @@ Licence
 Maintainer
 Stability
 Portability
+
+  TODO need to be able to exec a command and have it not touch the undo stack
+  in case it's a no-op... or, perhaps we just run through mempties in the
+  undo/redo stack!?!? Yeah! Your Command returns mempty if and only if it is
+  a no-op, and we don't push mempty onto the stack.
+  Hm, yes that would be great, if we had equality on commands, but we don't.
+  Alternatively, we could have it return Maybe (Command env) and give Nothing
+  if and only if it was a no-op, and NEVER give Just mempty because that's
+  an error.
+
 -}
 
 module Control.CommandRunner (
@@ -149,8 +159,8 @@ undo cmdRunner k = do
         redoCmd <- runCommand u (cmdRunnerEnv cmdRunner)
         modifyIORef (cmdRunnerUndoStack cmdRunner) (const us)
         modifyIORef (cmdRunnerRedoStack cmdRunner) ((:) redoCmd)
-        currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
-        k currentEnvironment
+  currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
+  k currentEnvironment
 
 redo :: CommandRunner env -> (env -> IO ()) -> IO ()
 redo cmdRunner k = do
@@ -161,8 +171,8 @@ redo cmdRunner k = do
         undoCmd <- runCommand r (cmdRunnerEnv cmdRunner)
         modifyIORef (cmdRunnerRedoStack cmdRunner) (const rs)
         modifyIORef (cmdRunnerUndoStack cmdRunner) ((:) undoCmd)
-        currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
-        k currentEnvironment
+  currentEnvironment <- readIORef (cmdRunnerEnv cmdRunner)
+  k currentEnvironment
 
 peek :: CommandRunner env -> IO env
 peek cmdRunner = readIORef (cmdRunnerEnv cmdRunner)
